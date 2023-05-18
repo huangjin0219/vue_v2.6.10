@@ -14,8 +14,10 @@ import { isNonPhrasingTag } from 'web/compiler/util'
 import { unicodeRegExp } from 'core/util/lang'
 
 // Regular Expressions for parsing tags and attributes
-const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
-const dynamicArgAttribute = /^\s*((?:v-[\w-]+:|@|:|#)\[[^=]+\][^\s"'<>\/=]*)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
+const attribute =
+  /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
+const dynamicArgAttribute =
+  /^\s*((?:v-[\w-]+:|@|:|#)\[[^=]+\][^\s"'<>\/=]*)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
 const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z${unicodeRegExp.source}]*`
 const qnameCapture = `((?:${ncname}\\:)?${ncname})`
 const startTagOpen = new RegExp(`^<${qnameCapture}`)
@@ -44,14 +46,16 @@ const encodedAttrWithNewLines = /&(?:lt|gt|quot|amp|#39|#10|#9);/g
 
 // #5992
 const isIgnoreNewlineTag = makeMap('pre,textarea', true)
-const shouldIgnoreFirstNewline = (tag, html) => tag && isIgnoreNewlineTag(tag) && html[0] === '\n'
+const shouldIgnoreFirstNewline = (tag, html) =>
+  tag && isIgnoreNewlineTag(tag) && html[0] === '\n'
 
-function decodeAttr (value, shouldDecodeNewlines) {
+function decodeAttr(value, shouldDecodeNewlines) {
   const re = shouldDecodeNewlines ? encodedAttrWithNewLines : encodedAttr
-  return value.replace(re, match => decodingMap[match])
+  return value.replace(re, (match) => decodingMap[match])
 }
 
-export function parseHTML (html, options) {
+// 解析标签生成ast核心
+export function parseHTML(html, options) {
   const stack = []
   const expectHTML = options.expectHTML
   const isUnaryTag = options.isUnaryTag || no
@@ -62,15 +66,22 @@ export function parseHTML (html, options) {
     last = html
     // Make sure we're not in a plaintext content element like script/style
     if (!lastTag || !isPlainTextElement(lastTag)) {
+      // 查找<
       let textEnd = html.indexOf('<')
+      // 如果<在第一个 那么证明接下来就是一个标签 不管是开始还是结束标签
       if (textEnd === 0) {
         // Comment:
+        // 如果是注释标签
         if (comment.test(html)) {
           const commentEnd = html.indexOf('-->')
 
           if (commentEnd >= 0) {
             if (options.shouldKeepComment) {
-              options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
+              options.comment(
+                html.substring(4, commentEnd),
+                index,
+                index + commentEnd + 3
+              )
             }
             advance(commentEnd + 3)
             continue
@@ -88,6 +99,7 @@ export function parseHTML (html, options) {
         }
 
         // Doctype:
+        // html文件开始标签
         const doctypeMatch = html.match(doctype)
         if (doctypeMatch) {
           advance(doctypeMatch[0].length)
@@ -95,6 +107,7 @@ export function parseHTML (html, options) {
         }
 
         // End tag:
+         // 匹配结束标签</
         const endTagMatch = html.match(endTag)
         if (endTagMatch) {
           const curIndex = index
@@ -104,8 +117,10 @@ export function parseHTML (html, options) {
         }
 
         // Start tag:
+        // 如果开始标签解析有结果
         const startTagMatch = parseStartTag()
         if (startTagMatch) {
+          // 把解析好的标签名和属性解析生成ast
           handleStartTag(startTagMatch)
           if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
             advance(1)
@@ -115,6 +130,7 @@ export function parseHTML (html, options) {
       }
 
       let text, rest, next
+      // 形如 hello<div></div>
       if (textEnd >= 0) {
         rest = html.slice(textEnd)
         while (
@@ -146,7 +162,12 @@ export function parseHTML (html, options) {
     } else {
       let endTagLength = 0
       const stackedTag = lastTag.toLowerCase()
-      const reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'))
+      const reStackedTag =
+        reCache[stackedTag] ||
+        (reCache[stackedTag] = new RegExp(
+          '([\\s\\S]*?)(</' + stackedTag + '[^>]*>)',
+          'i'
+        ))
       const rest = html.replace(reStackedTag, function (all, text, endTag) {
         endTagLength = endTag.length
         if (!isPlainTextElement(stackedTag) && stackedTag !== 'noscript') {
@@ -170,7 +191,9 @@ export function parseHTML (html, options) {
     if (html === last) {
       options.chars && options.chars(html)
       if (process.env.NODE_ENV !== 'production' && !stack.length && options.warn) {
-        options.warn(`Mal-formatted tag at end of template: "${html}"`, { start: index + html.length })
+        options.warn(`Mal-formatted tag at end of template: "${html}"`, {
+          start: index + html.length
+        })
       }
       break
     }
@@ -179,12 +202,14 @@ export function parseHTML (html, options) {
   // Clean up any remaining tags
   parseEndTag()
 
-  function advance (n) {
+  //截取html字符串 每次匹配到了就往前继续匹配
+  function advance(n) {
     index += n
     html = html.substring(n)
   }
 
-  function parseStartTag () {
+  // 匹配开始标签
+  function parseStartTag() {
     const start = html.match(startTagOpen)
     if (start) {
       const match = {
@@ -192,15 +217,24 @@ export function parseHTML (html, options) {
         attrs: [],
         start: index
       }
+      // 匹配到了开始标签 就截取掉
       advance(start[0].length)
+
+      // 开始匹配属性
+      // end代表结束符号>  如果不是匹配到了结束标签
+      // attr 表示匹配的属性
       let end, attr
-      while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
+      while (
+        !(end = html.match(startTagClose)) &&
+        (attr = html.match(dynamicArgAttribute) || html.match(attribute))
+      ) {
         attr.start = index
         advance(attr[0].length)
         attr.end = index
         match.attrs.push(attr)
       }
       if (end) {
+        // 代表一个标签匹配到结束的>了 代表开始标签解析完毕
         match.unarySlash = end[1]
         advance(end[0].length)
         match.end = index
@@ -209,7 +243,8 @@ export function parseHTML (html, options) {
     }
   }
 
-  function handleStartTag (match) {
+  // 对开始标签进行处理
+  function handleStartTag(match) {
     const tagName = match.tagName
     const unarySlash = match.unarySlash
 
@@ -229,9 +264,10 @@ export function parseHTML (html, options) {
     for (let i = 0; i < l; i++) {
       const args = match.attrs[i]
       const value = args[3] || args[4] || args[5] || ''
-      const shouldDecodeNewlines = tagName === 'a' && args[1] === 'href'
-        ? options.shouldDecodeNewlinesForHref
-        : options.shouldDecodeNewlines
+      const shouldDecodeNewlines =
+        tagName === 'a' && args[1] === 'href'
+          ? options.shouldDecodeNewlinesForHref
+          : options.shouldDecodeNewlines
       attrs[i] = {
         name: args[1],
         value: decodeAttr(value, shouldDecodeNewlines)
@@ -243,7 +279,13 @@ export function parseHTML (html, options) {
     }
 
     if (!unary) {
-      stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end })
+      stack.push({
+        tag: tagName,
+        lowerCasedTag: tagName.toLowerCase(),
+        attrs: attrs,
+        start: match.start,
+        end: match.end
+      })
       lastTag = tagName
     }
 
@@ -252,7 +294,7 @@ export function parseHTML (html, options) {
     }
   }
 
-  function parseEndTag (tagName, start, end) {
+  function parseEndTag(tagName, start, end) {
     let pos, lowerCasedTagName
     if (start == null) start = index
     if (end == null) end = index
@@ -273,14 +315,15 @@ export function parseHTML (html, options) {
     if (pos >= 0) {
       // Close all the open elements, up the stack
       for (let i = stack.length - 1; i >= pos; i--) {
-        if (process.env.NODE_ENV !== 'production' &&
+        if (
+          process.env.NODE_ENV !== 'production' &&
           (i > pos || !tagName) &&
           options.warn
         ) {
-          options.warn(
-            `tag <${stack[i].tag}> has no matching end tag.`,
-            { start: stack[i].start, end: stack[i].end }
-          )
+          options.warn(`tag <${stack[i].tag}> has no matching end tag.`, {
+            start: stack[i].start,
+            end: stack[i].end
+          })
         }
         if (options.end) {
           options.end(stack[i].tag, start, end)
