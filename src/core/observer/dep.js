@@ -9,7 +9,12 @@ let uid = 0
 /**
  * A dep is an observable that can have multiple
  * directives subscribing to it.
+Dep 也是一个构造函数 可以把他理解为观察者模式里面的被观察者 
+在 subs 里面收集 watcher 当数据变动的时候通知自身 subs 所有的 watcher 更新
+Dep.target 是一个全局 Watcher 指向 初始状态是 null
  */
+// dep和watcher是多对多的关系
+// 每个属性都有自己的dep
 export default class Dep {
   static target: ?Watcher;
   id: number;
@@ -17,7 +22,7 @@ export default class Dep {
 
   constructor () {
     this.id = uid++
-    this.subs = []
+    this.subs = [] // 这个是存放watcher的容器
   }
 
   addSub (sub: Watcher) {
@@ -52,6 +57,7 @@ export default class Dep {
 // The current target watcher being evaluated.
 // This is globally unique because only one watcher
 // can be evaluated at a time.
+// 默认Dep.target为null
 Dep.target = null
 const targetStack = []
 

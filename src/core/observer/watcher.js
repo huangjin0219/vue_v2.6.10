@@ -22,6 +22,9 @@ let uid = 0
  * A watcher parses an expression, collects dependencies,
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
+ * 观察者解析表达式，收集依赖关系，并在表达式值改变时触发回调
+ * 我们可以把 Watcher 当做观察者 它需要订阅数据的变动 当数据变动之后 通知它去执行某些方法 
+ * 其实本质就是一个构造函数 初始化的时候会去执行 get 方法
  */
 export default class Watcher {
   vm: Component;
@@ -55,6 +58,7 @@ export default class Watcher {
     }
     vm._watchers.push(this)
     // options
+    // 额外的选项 true代表渲染watcher
     if (options) {
       this.deep = !!options.deep
       this.user = !!options.user
@@ -64,19 +68,22 @@ export default class Watcher {
     } else {
       this.deep = this.user = this.lazy = this.sync = false
     }
+    // 回调函数 比如在watcher更新之前可以执行beforeUpdate方法
     this.cb = cb
+    // 全局变量uid  每次new Watcher都会自增
     this.id = ++uid // uid for batching
     this.active = true
     this.dirty = this.lazy // for lazy watchers
-    this.deps = []
+    this.deps = [] //存放dep的容器
     this.newDeps = []
-    this.depIds = new Set()
+    this.depIds = new Set() //用来去重dep
     this.newDepIds = new Set()
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''
     // parse expression for getter
     if (typeof expOrFn === 'function') {
+      // 如果表达式是一个函数
       this.getter = expOrFn
     } else {
       this.getter = parsePath(expOrFn)
@@ -90,6 +97,7 @@ export default class Watcher {
         )
       }
     }
+    // 实例化就会默认调用get方法
     this.value = this.lazy
       ? undefined
       : this.get()
@@ -99,10 +107,12 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
+    // 在调用方法之前先把当前watcher实例推到全局Dep.target上
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+      //如果watcher是渲染watcher 那么就相当于执行  vm._update(vm._render()) 这个方法在render函数执行的时候会取值 从而实现依赖收集
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -116,6 +126,7 @@ export default class Watcher {
       if (this.deep) {
         traverse(value)
       }
+      // 在调用方法之后把当前watcher实例从全局Dep.target移除
       popTarget()
       this.cleanupDeps()
     }
@@ -125,12 +136,14 @@ export default class Watcher {
   /**
    * Add a dependency to this directive.
    */
+  // 把dep放到deps里面 同时保证同一个dep只被保存到watcher一次  同样的  同一个watcher也只会保存在dep一次
   addDep (dep: Dep) {
     const id = dep.id
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
+        // 直接调用dep的addSub方法  把自己--watcher实例添加到dep的subs容器里面
         dep.addSub(this)
       }
     }

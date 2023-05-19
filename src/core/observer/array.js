@@ -40,7 +40,7 @@ methodsToPatch.forEach(function (method) {
     }
     // 如果有新增的元素 inserted是一个数组 调用 Observer 实例的 observeArray 对数组每一项进行观测
     if (inserted) ob.observeArray(inserted)
-    // 之后咱们还可以在这里检测到数组改变了之后从而触发视图更新的操作--后续源码会揭晓
+    // 数组派发更新 ob指的就是数组对应的Observer实例 我们在get的时候判断如果属性的值还是对象那么就在Observer实例的dep收集依赖 所以这里是一一对应的  可以直接更新
     // notify change
     ob.dep.notify()
     return result
