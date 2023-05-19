@@ -11,9 +11,10 @@ const callbacks = []
 let pending = false
 
 function flushCallbacks () {
-  pending = false
+  pending = false // 把标志还原为false
   const copies = callbacks.slice(0)
   callbacks.length = 0
+  // 依次执行回调
   for (let i = 0; i < copies.length; i++) {
     copies[i]()
   }
@@ -30,6 +31,7 @@ function flushCallbacks () {
 // where microtasks have too high a priority and fire in between supposedly
 // sequential events (e.g. #4521, #6690, which have workarounds)
 // or even between bubbling of the same event (#6566).
+// 定义异步方法  采用优雅降级
 let timerFunc
 
 // The nextTick behavior leverages the microtask queue, which can be accessed
@@ -40,6 +42,7 @@ let timerFunc
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
+  // 如果支持promise
   const p = Promise.resolve()
   timerFunc = () => {
     p.then(flushCallbacks)
@@ -59,6 +62,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // Use MutationObserver where native Promise is not available,
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
+  // MutationObserver 主要是监听dom变化 也是一个异步方法
   let counter = 1
   const observer = new MutationObserver(flushCallbacks)
   const textNode = document.createTextNode(String(counter))
@@ -71,6 +75,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
   isUsingMicroTask = true
 } else if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
+  // 如果前面都不支持 判断setImmediate
   // Fallback to setImmediate.
   // Techinically it leverages the (macro) task queue,
   // but it is still a better choice than setTimeout.
@@ -78,14 +83,17 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     setImmediate(flushCallbacks)
   }
 } else {
+  // 最后降级采用setTimeout
   // Fallback to setTimeout.
   timerFunc = () => {
     setTimeout(flushCallbacks, 0)
   }
 }
 
+// 主要思路就是采用微任务优先的方式调用异步方法去执行 nextTick 包装的方法
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 除了渲染watcher  还有用户自己手动调用的nextTick 一起被收集到数组
   callbacks.push(() => {
     if (cb) {
       try {
@@ -98,6 +106,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
     }
   })
   if (!pending) {
+    // 如果多次调用nextTick  只会执行一次异步 等异步队列清空之后再把标志变为false
     pending = true
     timerFunc()
   }

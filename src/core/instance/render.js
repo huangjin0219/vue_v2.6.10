@@ -64,6 +64,7 @@ export function renderMixin (Vue: Class<Component>) {
   // render函数里面有_c _v _s方法需要定义
   installRenderHelpers(Vue.prototype)
 
+  // 挂载在原型的nextTick方法 可供用户手动调用
   Vue.prototype.$nextTick = function (fn: Function) {
     return nextTick(fn, this)
   }

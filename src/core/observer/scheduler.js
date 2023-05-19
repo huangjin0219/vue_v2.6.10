@@ -67,6 +67,7 @@ if (inBrowser && !isIE) {
 
 /**
  * Flush both queues and run the watchers.
+ * 刷新两个队列并运行监视程序。
  */
 function flushSchedulerQueue () {
   currentFlushTimestamp = getNow()
@@ -92,6 +93,7 @@ function flushSchedulerQueue () {
     }
     id = watcher.id
     has[id] = null
+    // 调用watcher的run方法 执行真正的更新操作
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -114,6 +116,7 @@ function flushSchedulerQueue () {
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
+  // 执行完之后重置状态
   resetSchedulerState()
 
   // call component updated and activated hooks
@@ -161,11 +164,14 @@ function callActivatedHooks (queue) {
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
  */
+// 实现异步队列机制
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+  //   watcher去重
   if (has[id] == null) {
     has[id] = true
     if (!flushing) {
+      //  同步代码执行 把全部的watcher都放到队列里面去
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
@@ -184,6 +190,7 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 进行异步调用
       nextTick(flushSchedulerQueue)
     }
   }
