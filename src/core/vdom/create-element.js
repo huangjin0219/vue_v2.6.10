@@ -25,6 +25,7 @@ const ALWAYS_NORMALIZE = 2
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
+// 创建元素vnode 等于render函数里面的 h=>h(App)
 export function createElement (
   context: Component,
   tag: any,

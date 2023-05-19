@@ -19,7 +19,9 @@ function Vue(options) {
 initMixin(Vue)
 stateMixin(Vue)
 eventsMixin(Vue)
+// 混入_update
 lifecycleMixin(Vue)
+// 混入_render
 renderMixin(Vue)
 
 export default Vue

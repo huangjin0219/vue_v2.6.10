@@ -58,8 +58,10 @@ export function setCurrentRenderingInstance (vm: Component) {
   currentRenderingInstance = vm
 }
 
+// render 函数转化成虚拟 dom 核心方法 _render
 export function renderMixin (Vue: Class<Component>) {
   // install runtime convenience helpers
+  // render函数里面有_c _v _s方法需要定义
   installRenderHelpers(Vue.prototype)
 
   Vue.prototype.$nextTick = function (fn: Function) {
@@ -68,6 +70,7 @@ export function renderMixin (Vue: Class<Component>) {
 
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
+    // 获取模板编译生成的render方法
     const { render, _parentVnode } = vm.$options
 
     if (_parentVnode) {
@@ -88,6 +91,7 @@ export function renderMixin (Vue: Class<Component>) {
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
       currentRenderingInstance = vm
+      // 生成vnode--虚拟dom
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)
