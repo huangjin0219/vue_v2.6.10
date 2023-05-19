@@ -174,7 +174,7 @@ export function mountComponent (
       }
     }
   }
-  callHook(vm, 'beforeMount')
+  callHook(vm, 'beforeMount') //初始渲染之前
 
   let updateComponent
   /* istanbul ignore if */
@@ -208,7 +208,7 @@ export function mountComponent (
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
-        callHook(vm, 'beforeUpdate')
+        callHook(vm, 'beforeUpdate') // 更新之前
       }
     }
   }, true /* isRenderWatcher */)
@@ -218,7 +218,7 @@ export function mountComponent (
   // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {
     vm._isMounted = true
-    callHook(vm, 'mounted')
+    callHook(vm, 'mounted') // 渲染完成之后
   }
   return vm
 }
@@ -344,6 +344,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 依次执行生命周期对应的方法
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
@@ -351,6 +352,7 @@ export function callHook (vm: Component, hook: string) {
   const info = `${hook} hook`
   if (handlers) {
     for (let i = 0, j = handlers.length; i < j; i++) {
+      // handlers[i].call(vm); //生命周期里面的this指向当前实例
       invokeWithErrorHandling(handlers[i], vm, null, vm, info)
     }
   }

@@ -26,6 +26,7 @@ import {
  * how to merge a parent option value and a child option
  * value into the final value.
  */
+// 合并策略
 const strats = config.optionMergeStrategies
 
 /**
@@ -143,13 +144,14 @@ strats.data = function (
 /**
  * Hooks and props are merged as arrays.
  */
+// 生命周期合并策略
 function mergeHook (
   parentVal: ?Array<Function>,
   childVal: ?Function | ?Array<Function>
 ): ?Array<Function> {
   const res = childVal
-    ? parentVal
-      ? parentVal.concat(childVal)
+    ? parentVal // 如果有儿子
+      ? parentVal.concat(childVal) // 有儿子有父亲 合并成一个数组
       : Array.isArray(childVal)
         ? childVal
         : [childVal]
@@ -169,6 +171,7 @@ function dedupeHooks (hooks) {
   return res
 }
 
+// 为生命周期添加合并策略
 LIFECYCLE_HOOKS.forEach(hook => {
   strats[hook] = mergeHook
 })
@@ -260,6 +263,7 @@ strats.provide = mergeDataOrFn
 
 /**
  * Default strategy.
+ * 默认策略 即覆盖 有儿子用儿子的
  */
 const defaultStrat = function (parentVal: any, childVal: any): any {
   return childVal === undefined
@@ -385,6 +389,7 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
  */
+// mixin核心方法
 export function mergeOptions (
   parent: Object,
   child: Object,
@@ -419,14 +424,17 @@ export function mergeOptions (
 
   const options = {}
   let key
+  // 遍历父亲
   for (key in parent) {
     mergeField(key)
   }
   for (key in child) {
+    // 父亲没有 儿子有
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
   }
+  // 真正合并字段方法
   function mergeField (key) {
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)

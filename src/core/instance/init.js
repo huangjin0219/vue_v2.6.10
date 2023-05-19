@@ -15,7 +15,6 @@ let uid = 0
 export function initMixin(Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     // 这里的this代表调用_init方法的对象(实例对象)
-    //  this.$options就是用户new Vue的时候传入的属性
     const vm: Component = this
     // a uid
     vm._uid = uid++
@@ -31,6 +30,7 @@ export function initMixin(Vue: Class<Component>) {
     // a flag to avoid this being observed
     vm._isVue = true
     // merge options
+    // this.$options 就是用户 new Vue 的时候传入的属性和全局的Vue.options合并之后的结果
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
@@ -54,12 +54,12 @@ export function initMixin(Vue: Class<Component>) {
     initLifecycle(vm)
     initEvents(vm)
     initRender(vm)
-    callHook(vm, 'beforeCreate')
+    callHook(vm, 'beforeCreate') //初始化数据之前
     initInjections(vm) // resolve injections before data/props
     // 初始化状态
     initState(vm)
     initProvide(vm) // resolve provide after data/props
-    callHook(vm, 'created')
+    callHook(vm, 'created') //初始化数据之后
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
