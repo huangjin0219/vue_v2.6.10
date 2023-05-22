@@ -3,11 +3,11 @@
 import { ASSET_TYPES } from 'shared/constants'
 import { isPlainObject, validateComponentName } from '../util/index'
 
-export function initAssetRegisters (Vue: GlobalAPI) {
+export function initAssetRegisters(Vue: GlobalAPI) {
   /**
    * Create asset registration methods.
    */
-  ASSET_TYPES.forEach(type => {
+  ASSET_TYPES.forEach((type) => {
     Vue[type] = function (
       id: string,
       definition: Function | Object
@@ -20,6 +20,9 @@ export function initAssetRegisters (Vue: GlobalAPI) {
           validateComponentName(id)
         }
         if (type === 'component' && isPlainObject(definition)) {
+          // this指向Vue
+          // 全局组件注册
+          // 子组件可能也有extend方法  VueComponent.component方法
           definition.name = definition.name || id
           definition = this.options._base.extend(definition)
         }

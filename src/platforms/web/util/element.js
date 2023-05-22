@@ -33,6 +33,7 @@ export const isSVG = makeMap(
 
 export const isPreTag = (tag: ?string): boolean => tag === 'pre'
 
+// 判断是不是常规 html 标签
 export const isReservedTag = (tag: string): ?boolean => {
   return isHTMLTag(tag) || isSVG(tag)
 }

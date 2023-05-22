@@ -183,12 +183,15 @@ LIFECYCLE_HOOKS.forEach(hook => {
  * a three-way merge between constructor options, instance
  * options and parent options.
  */
+// 组件 指令 过滤器的合并策略
 function mergeAssets (
   parentVal: ?Object,
   childVal: ?Object,
   vm?: Component,
   key: string
 ): Object {
+  // 比如有同名的全局组件和自己定义的局部组件 那么parentVal代表全局组件 自己定义的组件是childVal  
+  // 首先会查找自已局部组件有就用自己的  没有就从原型继承全局组件  res.__proto__===parentVal
   const res = Object.create(parentVal || null)
   if (childVal) {
     process.env.NODE_ENV !== 'production' && assertObjectType(key, childVal, vm)
@@ -198,6 +201,7 @@ function mergeAssets (
   }
 }
 
+// 定义组件的合并策略
 ASSET_TYPES.forEach(function (type) {
   strats[type + 's'] = mergeAssets
 })

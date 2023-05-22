@@ -11,11 +11,13 @@ export function initExtend (Vue: GlobalAPI) {
    * constructors" for prototypal inheritance and cache them.
    */
   Vue.cid = 0
-  let cid = 1
+  let cid = 1 //组件的唯一标识
+
 
   /**
    * Class inheritance
    */
+  // 创建子类继承Vue父类 便于属性扩展
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
     const Super = this
@@ -30,12 +32,14 @@ export function initExtend (Vue: GlobalAPI) {
       validateComponentName(name)
     }
 
+    // 创建子类的构造函数 并且调用初始化方法
     const Sub = function VueComponent (options) {
-      this._init(options)
+      this._init(options) // 调用Vue初始化方法
     }
-    Sub.prototype = Object.create(Super.prototype)
-    Sub.prototype.constructor = Sub
+    Sub.prototype = Object.create(Super.prototype) // 子类原型指向父类
+    Sub.prototype.constructor = Sub // constructor指向自己
     Sub.cid = cid++
+    // 合并自己的options和父类的options
     Sub.options = mergeOptions(
       Super.options,
       extendOptions

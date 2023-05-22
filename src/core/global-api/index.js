@@ -51,19 +51,19 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     return obj
   }
 
-  Vue.options = Object.create(null)
+  Vue.options = Object.create(null) // 全局的组件 指令 过滤器
   ASSET_TYPES.forEach(type => {
     Vue.options[type + 's'] = Object.create(null)
   })
 
   // this is used to identify the "base" constructor to extend all plain-object
   // components with in Weex's multi-instance scenarios.
-  Vue.options._base = Vue
+  Vue.options._base = Vue // _base指向Vue
 
   extend(Vue.options.components, builtInComponents)
 
   initUse(Vue)
   initMixin(Vue)
-  initExtend(Vue)
-  initAssetRegisters(Vue)
+  initExtend(Vue) // extend方法定义
+  initAssetRegisters(Vue) // assets 注册方法 包含组件 指令和过滤器
 }

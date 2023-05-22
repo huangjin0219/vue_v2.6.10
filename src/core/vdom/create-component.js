@@ -34,6 +34,7 @@ import {
 
 // inline hooks to be invoked on component VNodes during patch
 const componentVNodeHooks = {
+  // 组件创建过程的自身初始化方法
   init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
     if (
       vnode.componentInstance &&
@@ -48,6 +49,7 @@ const componentVNodeHooks = {
         vnode,
         activeInstance
       )
+      // 因为没有传入el属性  需要手动挂载 为了在组件实例上面增加$el方法可用于生成组件的真实渲染节点
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
   },
@@ -112,6 +114,7 @@ export function createComponent (
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
+  // 普通选项对象 转换为 构造函数
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
@@ -183,10 +186,12 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // 将组件管理挂钩安装到占位符节点上
   installComponentHooks(data)
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
+  // 组件vnode  也叫占位符vnode  ==> $vnode
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
@@ -223,6 +228,7 @@ export function createComponentInstanceForVnode (
   return new vnode.componentOptions.Ctor(options)
 }
 
+// 声明组件的生命周期
 function installComponentHooks (data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
   for (let i = 0; i < hooksToMerge.length; i++) {
