@@ -57,16 +57,25 @@ export default class Dep {
 // The current target watcher being evaluated.
 // This is globally unique because only one watcher
 // can be evaluated at a time.
+/* 
+  可见最初设计存放 watcher 的容器就是一个栈结构 
+  因为整个 Vue 生命周期的过程中会存在很多的 watcher 比如渲染 watcher 计算 watcher 侦听 watcher 等 
+  而每个 watcher 在调用了自身的 get 方法前后会分别调用 pushTarget 入栈和 popTarget 出栈 
+  这样子当计算属性重新计算之后就立马会出栈 那么外层的 watcher 就会成为新的 Dep.target 
+  我们使用 watcher.depend 方法让计算属性依赖的值收集一遍外层的渲染 watcher 
+  这样子当计算属性依赖的值改变了既可以重新计算又可以刷新视图
+*/
 // 默认Dep.target为null
 Dep.target = null
+// 栈结构用来存watcher
 const targetStack = []
 
 export function pushTarget (target: ?Watcher) {
   targetStack.push(target)
-  Dep.target = target
+  Dep.target = target // Dep.target指向当前watcher
 }
 
 export function popTarget () {
-  targetStack.pop()
+  targetStack.pop() // 当前watcher出栈 拿到上一个watcher
   Dep.target = targetStack[targetStack.length - 1]
 }
