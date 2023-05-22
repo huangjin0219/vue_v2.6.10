@@ -29,7 +29,7 @@ export function initAssetRegisters(Vue: GlobalAPI) {
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition }
         }
-        this.options[type + 's'][id] = definition
+        this.options[type + 's'][id] = definition //把组件  指令  过滤器 放到Vue.options中
         return definition
       }
     }

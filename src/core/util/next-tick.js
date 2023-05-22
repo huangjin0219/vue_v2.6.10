@@ -7,7 +7,7 @@ import { isIE, isIOS, isNative } from './env'
 
 export let isUsingMicroTask = false
 
-const callbacks = []
+const callbacks = [] //回调函数
 let pending = false
 
 function flushCallbacks () {
@@ -31,7 +31,7 @@ function flushCallbacks () {
 // where microtasks have too high a priority and fire in between supposedly
 // sequential events (e.g. #4521, #6690, which have workarounds)
 // or even between bubbling of the same event (#6566).
-// 定义异步方法  采用优雅降级
+// 定义异步方法  采用优雅降级 先采用微任务并按照优先级优雅降级的方式实现异步刷新
 let timerFunc
 
 // The nextTick behavior leverages the microtask queue, which can be accessed

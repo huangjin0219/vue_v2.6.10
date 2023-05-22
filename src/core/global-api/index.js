@@ -51,6 +51,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     return obj
   }
 
+  // Vue.options 是存放组件 指令和过滤器的容器 并且 Vue.options._base 指向 Vue 构造函数
   Vue.options = Object.create(null) // 全局的组件 指令 过滤器
   ASSET_TYPES.forEach(type => {
     Vue.options[type + 's'] = Object.create(null)
